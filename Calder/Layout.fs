@@ -71,7 +71,14 @@ module Layout =
     let project (size: float) (graph: Graph<_>) =
         match graph.State with
         | Empty -> graph
-        | Single -> graph
+        | Single ->
+            { graph with
+                Nodes = 
+                    graph.Nodes
+                    |> Map.map (fun _ pos -> 
+                        { X = size / 2.0; Y = size / 2.0 } 
+                        )
+            }
         | Full ->
             let xs, ys = 
                 graph.Nodes 
