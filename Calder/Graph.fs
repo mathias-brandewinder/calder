@@ -27,7 +27,8 @@ module Graph =
             elif nodes = 1
             then Single
             else Full
-
+        member this.Node node =
+            this.Nodes.[node]
         member this.NewPosition () =
             match this.State with
             | Empty -> { X = 0.0; Y = 0.0 }
@@ -37,7 +38,6 @@ module Graph =
                     X = rng.NextDouble () - 0.5
                     Y = rng.NextDouble () - 0.5 
                 }
-     
         member this.Center = 
             match this.State with
             | Empty -> { X = 0.0; Y = 0.0 }

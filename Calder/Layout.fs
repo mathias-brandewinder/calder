@@ -54,20 +54,19 @@ module Layout =
                 |> force.applyFrom origin.Value
                 |> fun dir -> dir.Length
                 )
-
             )
 
-    let solve config (graph: Graph<_>) =
+    let solve (rate, iters) config (graph: Graph<_>) =
         match graph.State with
         | Empty -> graph
         | Single -> graph
         | Full ->
             graph
             |> Seq.unfold (fun graph -> 
-                let updated = update 0.5 config graph
+                let updated = update rate config graph
                 Some (graph, updated)
                 )
-            |> Seq.item 100
+            |> Seq.item iters
 
     let project (size: float) graph =
 
