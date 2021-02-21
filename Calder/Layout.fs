@@ -68,8 +68,11 @@ module Layout =
                 )
             |> Seq.item iters
 
-    let project (size: float) graph =
-
+    let project (size: float) (graph: Graph<_>) =
+        match graph.State with
+        | Empty -> graph
+        | Single -> graph
+        | Full ->
             let xs, ys = 
                 graph.Nodes 
                 |> Seq.map (fun kv -> kv.Value.X, kv.Value.Y)

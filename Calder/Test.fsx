@@ -40,3 +40,6 @@ graph
 |> Layout.update 0.1 config
 |> Layout.update 0.1 config
 |> Layout.energy config
+
+Graph.empty<int>
+|> Layout.project 100.0
