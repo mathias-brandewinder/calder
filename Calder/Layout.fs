@@ -6,8 +6,8 @@ module Layout =
     open Graph
 
     type Config = {
-        Center: Force
-        Neutral: Force
+        CenterAttraction: Force
+        Disconnected: Force
         }
 
     let nodeForce config graph node =
@@ -21,16 +21,16 @@ module Layout =
                 else
                     match forces |> Map.tryFind kv.Key with
                     | Some force -> force
-                    | None -> config.Neutral
+                    | None -> config.Disconnected
             position
-            |> force.applyFrom kv.Value  
+            |> force.applyFrom kv.Value
             )
-        |> (+) (config.Center.applyFrom graph.Center position)
-             
+        |> (+) (config.CenterAttraction.applyFrom graph.Center position)
+
     let update aggressiveness config graph =
         {
             graph with
-                Nodes = 
+                Nodes =
                     graph.Nodes
                     |> Map.map (fun node position ->
                         position + aggressiveness * nodeForce config graph node
@@ -39,21 +39,10 @@ module Layout =
 
     let energy config graph =
         graph.Nodes
-        |> Seq.sumBy (fun target ->
-            let forces = graph.Edges.[target.Key]
-            graph.Nodes
-            |> Seq.sumBy (fun origin ->
-                let force =
-                    if origin.Key = target.Key
-                    then Neutral
-                    else
-                        match forces |> Map.tryFind origin.Key with
-                        | Some force -> force
-                        | None -> config.Neutral
-                target.Value
-                |> force.applyFrom origin.Value
-                |> fun dir -> dir.Length
-                )
+        |> Seq.sumBy (fun kv ->
+            kv.Key
+            |> nodeForce config graph
+            |> fun dir -> dir.Length
             )
 
     let solve (rate, iters) config (graph: Graph<_>) =
@@ -62,7 +51,7 @@ module Layout =
         | Single -> graph
         | Full ->
             graph
-            |> Seq.unfold (fun graph -> 
+            |> Seq.unfold (fun graph ->
                 let updated = update rate config graph
                 Some (graph, updated)
                 )
@@ -73,15 +62,15 @@ module Layout =
         | Empty -> graph
         | Single ->
             { graph with
-                Nodes = 
+                Nodes =
                     graph.Nodes
-                    |> Map.map (fun _ pos -> 
-                        { X = size / 2.0; Y = size / 2.0 } 
+                    |> Map.map (fun _ pos ->
+                        { X = size / 2.0; Y = size / 2.0 }
                         )
             }
         | Full ->
-            let xs, ys = 
-                graph.Nodes 
+            let xs, ys =
+                graph.Nodes
                 |> Seq.map (fun kv -> kv.Value.X, kv.Value.Y)
                 |> Seq.toArray
                 |> Array.unzip
@@ -95,9 +84,9 @@ module Layout =
             let scaleY y = size * (y - yMin) / (yMax - yMin)
 
             { graph with
-                Nodes = 
+                Nodes =
                     graph.Nodes
-                    |> Map.map (fun _ pos -> 
-                        { X = scaleX pos.X; Y = scaleY pos.Y } 
+                    |> Map.map (fun _ pos ->
+                        { X = scaleX pos.X; Y = scaleY pos.Y }
                         )
             }
