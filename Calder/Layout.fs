@@ -7,25 +7,38 @@ module Layout =
 
     type Config = {
         CenterAttraction: Force
-        Disconnected: Force
+        NodeRepulsion: Force
         }
 
     let nodeForce config graph node =
         let position = graph.Nodes.[node]
         let forces = graph.Edges.[node]
-        graph.Nodes
-        |> Seq.sumBy (fun kv ->
-            let force =
-                if kv.Key = node
-                then Neutral
-                else
-                    match forces |> Map.tryFind kv.Key with
-                    | Some force -> force
-                    | None -> config.Disconnected
-            position
-            |> force.applyFrom kv.Value
-            )
-        |> (+) (config.CenterAttraction.applyFrom graph.Center position)
+        let nodesRepulsion =
+            graph.Nodes
+            |> Seq.sumBy (fun kv ->
+                let force =
+                    if kv.Key = node
+                    then Neutral
+                    else
+                        config.NodeRepulsion
+                position
+                |> force.applyFrom kv.Value
+                )
+        let edgesAttraction =
+            graph.Nodes
+            |> Seq.sumBy (fun kv ->
+                let force =
+                    if kv.Key = node
+                    then Neutral
+                    else
+                        match forces |> Map.tryFind kv.Key with
+                        | Some force -> force
+                        | None -> Neutral
+                position
+                |> force.applyFrom kv.Value
+                )
+        let centralAttraction = config.CenterAttraction.applyFrom graph.Center position
+        nodesRepulsion + edgesAttraction + centralAttraction
 
     let update aggressiveness config graph =
         {

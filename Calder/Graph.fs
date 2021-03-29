@@ -1,6 +1,6 @@
 namespace Calder
 
-module Graph = 
+module Graph =
 
     open Physics
 
@@ -17,7 +17,7 @@ module Graph =
 
     type Graph<'Node when 'Node: comparison> = {
         Nodes: Map<'Node, Point>
-        Edges: Map<'Node, Map<'Node, Force>>         
+        Edges: Map<'Node, Map<'Node, Force>>
         }
         with
         member this.State =
@@ -32,19 +32,20 @@ module Graph =
         member this.NewPosition () =
             match this.State with
             | Empty -> { X = 0.0; Y = 0.0 }
-            | _ -> 
-                let rng = System.Random ()
-                { 
-                    X = rng.NextDouble () - 0.5
-                    Y = rng.NextDouble () - 0.5 
-                }
-        member this.Center = 
-            match this.State with
-            | Empty -> { X = 0.0; Y = 0.0 }
             | _ ->
-                let x = this.Nodes |> Seq.averageBy (fun kv -> kv.Value.X)
-                let y = this.Nodes |> Seq.averageBy (fun kv -> kv.Value.Y)
-                { X = x; Y = y }
+                let rng = System.Random ()
+                {
+                    X = rng.NextDouble () - 0.5
+                    Y = rng.NextDouble () - 0.5
+                }
+        member this.Center =
+            { X = 0.0; Y = 0.0 }
+            // match this.State with
+            // | Empty -> { X = 0.0; Y = 0.0 }
+            // | _ ->
+            //     let x = this.Nodes |> Seq.averageBy (fun kv -> kv.Value.X)
+            //     let y = this.Nodes |> Seq.averageBy (fun kv -> kv.Value.Y)
+            //     { X = x; Y = y }
 
     let empty = {
         Nodes = Map.empty
@@ -65,7 +66,7 @@ module Graph =
                 |> Map.remove node
                 |> Map.map (fun _ edges ->
                     edges
-                    |> Map.filter (fun targetNode _ -> 
+                    |> Map.filter (fun targetNode _ ->
                         targetNode <> node
                         )
                     )
@@ -73,10 +74,10 @@ module Graph =
 
     let addEdge edge graph =
         { graph with
-            Edges = 
+            Edges =
                 graph.Edges
-                |> Map.add 
-                    edge.Node1 
+                |> Map.add
+                    edge.Node1
                     (graph.Edges.[edge.Node1] |> Map.add (edge.Node2) edge.Force)
                 |> Map.add
                     edge.Node2

@@ -12,6 +12,7 @@ let rng = System.Random 0
 let nodesCount = 20
 let edgesCount = 100
 
+let nodes = List.init nodesCount id
 let edges =
     List.init edgesCount (fun _ ->
         rng.Next(0, nodesCount),
@@ -21,7 +22,7 @@ let edges =
     |> List.distinct
 
 let graph =
-    (Graph.empty, List.init nodesCount id)
+    (Graph.empty, nodes)
     ||> List.fold (fun graph node -> graph |> Graph.addNode node)
     |> fun graph ->
         (graph, edges)
@@ -31,9 +32,17 @@ let graph =
             )
 
 let config: Layout.Config = {
-    CenterAttraction = { Attractor.Strength = 0.10 }
-    Disconnected = { Repulsor.Length = 1.0 }
+    CenterAttraction = { Attractor.Strength = 0.4 }
+    NodeRepulsion = { Coulomb.Repulsion = 1.0 }
     }
+
+// https://en.wikipedia.org/wiki/Circle_packing#Densest_packing
+let tightRadius (graph: Graph<_>) =
+    let nodes = graph.Nodes.Count
+    let packed = (pown (1.0 / 2.0) 2) * 3.14 * (float nodes) / 0.9069
+    sqrt (packed / 3.14)
+
+tightRadius graph
 
 let initialValue config graph =
     let initialEnergy =
@@ -100,15 +109,30 @@ let auto (iters, tolerance) config graph =
 
 #time "on"
 let test =
-    auto (100, 0.01) config graph
+    auto (1000, 0.01) config graph
     |> Layout.energy config
 
 let basic =
     graph
-    |> Layout.solve (a0, 100) config
+    |> Layout.solve (a0, 1000) config
     |> Layout.energy config
 
 let manual =
     graph
-    |> Layout.solve (0.25, 100) config
+    |> Layout.solve (0.010, 1000) config
     |> Layout.energy config
+
+// Auto test
+
+#load "Auto.fs"
+
+let g =
+    (Graph.empty, nodes)
+    ||> List.fold (fun graph node -> graph |> Calder.Auto.addNode node)
+    |> fun g ->
+        (g, edges)
+        ||> List.fold (fun graph edge -> graph |> Calder.Auto.addEdge edge)
+
+g |> Layout.energy config
+let solved = g |> Calder.Auto.solve (100, 0.001)
+solved  |> Layout.energy config

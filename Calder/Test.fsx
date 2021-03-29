@@ -13,17 +13,22 @@ let graph =
     |> Graph.addNode 2
     |> Graph.addNode 3
     |> Graph.addNode 4
-    |> Graph.addEdge { Node1 = 1; Node2 = 2; Force = { Length = 0.1; Stiffness = 1.0 } }
-    |> Graph.addEdge { Node1 = 3; Node2 = 4; Force = { Length = 0.1; Stiffness = 1.0 } }
+    |> Graph.addEdge { Node1 = 1; Node2 = 2; Force = { Length = 1.0; Stiffness = 1.0 } }
+    |> Graph.addEdge { Node1 = 3; Node2 = 4; Force = { Length = 1.0; Stiffness = 1.0 } }
 
 let config: Layout.Config = {
     CenterAttraction = { Attractor.Strength = 0.25 }
-    Disconnected = { Repulsor.Length = 0.25 }
+    NodeRepulsion = { Coulomb.Repulsion = 1.00 }
     }
 
 Layout.energy config graph
 
-let solved = Layout.solve (0.5, 50) config graph
+graph
+|> Layout.update 0.5 config
+// |> Layout.update 1.0 config
+|> Layout.energy config
+
+let solved = Layout.solve (0.25, 50) config graph
 solved |> Layout.energy config
 
 distance (solved.Node 1) (solved.Node 2)

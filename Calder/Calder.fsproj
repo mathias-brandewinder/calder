@@ -1,14 +1,12 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
-
+<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFramework>netcoreapp3.1</TargetFramework>
     <AssemblyVersion>0.1.0.0</AssemblyVersion>
   </PropertyGroup>
-
   <ItemGroup>
     <Compile Include="Physics.fs" />
     <Compile Include="Graph.fs" />
-    <Compile Include="Layout.fs" />    
+    <Compile Include="Layout.fs" />
+    <Compile Include="Auto.fs" />
   </ItemGroup>
-
 </Project>
