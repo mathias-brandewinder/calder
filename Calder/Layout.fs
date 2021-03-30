@@ -5,14 +5,45 @@ module Layout =
     open Physics
     open Graph
 
-    type Config = {
-        CenterAttraction: Force
-        NodeRepulsion: Force
+    type State =
+        | Empty
+        | Single
+        | Full
+
+    type Layout<'Node when 'Node: comparison> =
+        {
+            Nodes: Map<'Node, Point>
+        }
+        with
+        member this.State =
+            if this.Nodes.Count = 0
+            then Empty
+            elif this.Nodes.Count = 1
+            then Single
+            else Full
+        member this.Center =
+            match this.Nodes.IsEmpty with
+            | true -> Origin
+            | false ->
+                let x = this.Nodes |> Seq.averageBy (fun kv -> kv.Value.X)
+                let y = this.Nodes |> Seq.averageBy (fun kv -> kv.Value.Y)
+                { X = x; Y = y }
+
+    let initializeFrom (graph: Graph<_>) =
+        let rng = System.Random ()
+        {
+            Nodes =
+                graph.Nodes
+                |> Map.map (fun node _ ->
+                    {
+                        X = rng.NextDouble () - 0.5
+                        Y = rng.NextDouble () - 0.5
+                    }
+                    )
         }
 
-    let nodeForce config graph node =
-        let position = graph.Nodes.[node]
-        let forces = graph.Edges.[node]
+    let nodeForce (graph: Graph<_>) layout node =
+        let position = layout.Nodes.[node]
         let nodesRepulsion =
             graph.Nodes
             |> Seq.sumBy (fun kv ->
@@ -20,70 +51,66 @@ module Layout =
                     if kv.Key = node
                     then Neutral
                     else
-                        config.NodeRepulsion
+                        kv.Value
                 position
-                |> force.applyFrom kv.Value
+                |> force.applyFrom (layout.Nodes.[kv.Key])
                 )
         let edgesAttraction =
-            graph.Nodes
+            graph.Edges
+            |> Map.find node
             |> Seq.sumBy (fun kv ->
-                let force =
-                    if kv.Key = node
-                    then Neutral
-                    else
-                        match forces |> Map.tryFind kv.Key with
-                        | Some force -> force
-                        | None -> Neutral
+                let force = kv.Value
+                let origin = layout.Nodes.[kv.Key]
                 position
-                |> force.applyFrom kv.Value
+                |> force.applyFrom origin
                 )
-        let centralAttraction = config.CenterAttraction.applyFrom graph.Center position
-        nodesRepulsion + edgesAttraction + centralAttraction
+        // let centralAttraction = config.CenterAttraction.applyFrom graph.Center position
+        nodesRepulsion + edgesAttraction //+ centralAttraction
 
-    let update aggressiveness config graph =
+    let update aggressiveness (graph: Graph<_>) (layout: Layout<_>) =
         {
-            graph with
+            layout with
                 Nodes =
-                    graph.Nodes
+                    layout.Nodes
                     |> Map.map (fun node position ->
-                        position + aggressiveness * nodeForce config graph node
+                        position + aggressiveness * nodeForce graph layout node
                         )
         }
 
-    let energy config graph =
+    let energy (graph: Graph<_>) layout =
         graph.Nodes
         |> Seq.sumBy (fun kv ->
             kv.Key
-            |> nodeForce config graph
+            |> nodeForce graph layout
             |> fun dir -> dir.Length
             )
 
-    let solve (rate, iters) config (graph: Graph<_>) =
-        match graph.State with
-        | Empty -> graph
-        | Single -> graph
+    let solve (rate, iters) (graph: Graph<_>) (layout: Layout<_>) =
+        match layout.State with
+        | Empty -> layout
+        | Single -> layout
         | Full ->
-            graph
-            |> Seq.unfold (fun graph ->
-                let updated = update rate config graph
-                Some (graph, updated)
+            layout
+            |> Seq.unfold (fun layout ->
+                let updated = update rate graph layout
+                Some (layout, updated)
                 )
             |> Seq.item iters
 
-    let project (size: float) (graph: Graph<_>) =
-        match graph.State with
-        | Empty -> graph
+    let project (size: float) (layout: Layout<_>) =
+        match layout.State with
+        | Empty -> layout
         | Single ->
-            { graph with
+            { layout with
                 Nodes =
-                    graph.Nodes
+                    layout.Nodes
                     |> Map.map (fun _ pos ->
                         { X = size / 2.0; Y = size / 2.0 }
                         )
             }
         | Full ->
             let xs, ys =
-                graph.Nodes
+                layout.Nodes
                 |> Seq.map (fun kv -> kv.Value.X, kv.Value.Y)
                 |> Seq.toArray
                 |> Array.unzip
@@ -96,9 +123,9 @@ module Layout =
             let scaleX x = size * (x - xMin) / (xMax - xMin)
             let scaleY y = size * (y - yMin) / (yMax - yMin)
 
-            { graph with
+            { layout with
                 Nodes =
-                    graph.Nodes
+                    layout.Nodes
                     |> Map.map (fun _ pos ->
                         { X = scaleX pos.X; Y = scaleY pos.Y }
                         )

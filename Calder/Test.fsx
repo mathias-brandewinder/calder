@@ -9,44 +9,35 @@ open Calder.Layout
 
 let graph =
     Graph.empty
-    |> Graph.addNode 1
-    |> Graph.addNode 2
-    |> Graph.addNode 3
-    |> Graph.addNode 4
+    |> Graph.addNode (1, { CoulombRepulsor.Repulsion = 1.0 })
+    |> Graph.addNode (2, { CoulombRepulsor.Repulsion = 1.0 })
+    |> Graph.addNode (3, { CoulombRepulsor.Repulsion = 1.0 })
+    |> Graph.addNode (4, { CoulombRepulsor.Repulsion = 1.0 })
     |> Graph.addEdge { Node1 = 1; Node2 = 2; Force = { Length = 1.0; Stiffness = 1.0 } }
     |> Graph.addEdge { Node1 = 3; Node2 = 4; Force = { Length = 1.0; Stiffness = 1.0 } }
 
-let config: Layout.Config = {
-    CenterAttraction = { Attractor.Strength = 0.25 }
-    NodeRepulsion = { Coulomb.Repulsion = 1.00 }
-    }
+let layout = graph |> Layout.initializeFrom
 
-Layout.energy config graph
+Layout.energy graph layout
 
-graph
-|> Layout.update 0.5 config
+layout
+|> Layout.update 0.5 graph
 // |> Layout.update 1.0 config
-|> Layout.energy config
+|> Layout.energy graph
 
-let solved = Layout.solve (0.25, 50) config graph
-solved |> Layout.energy config
-
-distance (solved.Node 1) (solved.Node 2)
-distance (solved.Node 3) (solved.Node 4)
-
-for origin in 1 .. 4 do
-    for target in 1 .. 4 do
-        printfn "%i %i: %.2f" origin target (distance (solved.Node origin) (solved.Node target))
+let solved = Layout.solve (0.25, 50) graph layout
+solved |> Layout.energy graph
 
 solved |> Layout.project 100.0
 
-graph
-|> Layout.update 0.1 config
-|> Layout.update 0.1 config
-|> Layout.update 0.1 config
-|> Layout.energy config
+layout
+|> Layout.update 0.1 graph
+|> Layout.update 0.1 graph
+|> Layout.update 0.1 graph
+|> Layout.energy graph
 
-Graph.empty
+Graph.empty<int>
+|> Layout.initializeFrom
 |> Layout.project 100.0
 
 let nodeA = { X = 0.0; Y = 0.0 }

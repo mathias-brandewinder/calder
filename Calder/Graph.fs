@@ -10,51 +10,22 @@ module Graph =
         Force: Force
         }
 
-    type State =
-        | Empty
-        | Single
-        | Full
-
     type Graph<'Node when 'Node: comparison> = {
-        Nodes: Map<'Node, Point>
+        Nodes: Map<'Node, Force>
         Edges: Map<'Node, Map<'Node, Force>>
         }
         with
-        member this.State =
-            let nodes = this.Nodes.Count
-            if nodes = 0
-            then Empty
-            elif nodes = 1
-            then Single
-            else Full
         member this.Node node =
             this.Nodes.[node]
-        member this.NewPosition () =
-            match this.State with
-            | Empty -> { X = 0.0; Y = 0.0 }
-            | _ ->
-                let rng = System.Random ()
-                {
-                    X = rng.NextDouble () - 0.5
-                    Y = rng.NextDouble () - 0.5
-                }
-        member this.Center =
-            { X = 0.0; Y = 0.0 }
-            // match this.State with
-            // | Empty -> { X = 0.0; Y = 0.0 }
-            // | _ ->
-            //     let x = this.Nodes |> Seq.averageBy (fun kv -> kv.Value.X)
-            //     let y = this.Nodes |> Seq.averageBy (fun kv -> kv.Value.Y)
-            //     { X = x; Y = y }
 
     let empty = {
         Nodes = Map.empty
         Edges = Map.empty
         }
 
-    let addNode (node: 'Node) (graph: Graph<'Node>): Graph<'Node> =
+    let addNode (node: 'Node, force: Force) (graph: Graph<'Node>): Graph<'Node> =
         { graph with
-            Nodes = graph.Nodes |> Map.add node (graph.NewPosition ())
+            Nodes = graph.Nodes |> Map.add node force
             Edges = graph.Edges |> Map.add node Map.empty
         }
 

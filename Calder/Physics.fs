@@ -32,6 +32,8 @@ module Physics =
         static member (-) (pt1: Point, pt2: Point) =
             { DX = pt2.X - pt1.X; DY = pt2.Y - pt1.Y }
 
+    let Origin = { X = 0.0; Y = 0.0 }
+
     let distance (p1: Point) (p2: Point) =
         (p1 - p2).Length
 
