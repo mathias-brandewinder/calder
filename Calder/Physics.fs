@@ -45,6 +45,7 @@ module Physics =
             member this.applyFrom _ _ = Direction.Zero
         }
 
+    // Assymmetric spring
     type Spring = {
         Length: float
         Stiffness: float
@@ -53,7 +54,7 @@ module Physics =
         interface Force with
             member this.applyFrom origin target =
                 let direction = target - origin
-                let strength = this.Stiffness * (direction.Length - this.Length)
+                let strength = min 0.0 (this.Stiffness * (direction.Length - this.Length))
                 strength * direction
 
     // Coulomb-style repulsion force
