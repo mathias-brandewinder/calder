@@ -53,6 +53,9 @@ let manual =
 let SPRING = Auto.Spring.solve (100, 0.01) graph
 SPRING |> Layout.energy graph
 
+let fr = Auto.FruchtermanReingold.solve (2, 0.01) graph
+fr |> Layout.energy graph
+
 layout |> Layout.energy graph
 let solved = Calder.Auto.solve (100, 0.01) graph
 solved  |> Layout.energy graph
