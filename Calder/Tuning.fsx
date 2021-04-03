@@ -77,14 +77,9 @@ let edges =
     |> List.distinct
 
 let graph =
-    (Graph.empty (), nodes)
-    ||> List.fold (fun graph node -> graph |> Graph.addNode node)
-    |> fun graph ->
-        (graph, edges)
-        ||> List.fold (fun graph (x, y) ->
-            graph
-            |> Graph.addEdge (x, y)
-            )
+    Graph.empty ()
+    |> Graph.addNodes nodes
+    |> Graph.addEdges edges
 
 // SPRING algorithm
 
@@ -99,24 +94,9 @@ let SPRING =
 SPRING |> Layout.energy SPRINGGraph
 SPRING |> render SPRINGGraph
 
-let g =
-    Graph.empty ()
-    |> Graph.addNode 1
-    |> Graph.addNode 2
-    |> Graph.addNode 3
-    |> Graph.addNode 4
-    |> Graph.addNode 5
-    |> Graph.addNode 6
-    |> Graph.addEdge (1, 2)
-    |> Graph.addEdge (1, 3)
-    |> Graph.addEdge (1, 4)
-    |> Graph.addEdge (1, 5)
-    |> Graph.addEdge (1, 6)
-    |> Graph.addEdge (2, 3)
-    |> Graph.addEdge (2, 4)
 // Fruchterman-Reingold algorithm
 let frGraph =
-    g
+    graph
     |> Graphs.disjoint
     |> List.item 0
     |> Auto.FruchtermanReingold.setup
@@ -145,19 +125,14 @@ let crashes () =
             |> List.distinct
 
         let graph =
-            (Graph.empty (), nodes)
-            ||> List.fold (fun graph node -> graph |> Graph.addNode node)
-            |> fun graph ->
-                (graph, edges)
-                ||> List.fold (fun graph (x, y) ->
-                    graph
-                    |> Graph.addEdge (x, y)
-                    )
+            Graph.empty ()
+            |> Graph.addNodes nodes
+            |> Graph.addEdges edges
 
         let fGraph = Auto.FruchtermanReingold.setup graph
         let layout = Layout.initializeFrom fGraph
         let initialNrj = layout |> Layout.energy fGraph
-        let solved = fGraph |> Auto.FruchtermanReingold.solve (100, 0.01, 0.95) // |> Calder.Auto.solve (100, 0.001)
+        let solved = fGraph |> Auto.FruchtermanReingold.solve (100, 0.01, 0.95)
         let finalEnergy = solved  |> Layout.energy fGraph
 
         seed, initialNrj, finalEnergy

@@ -22,6 +22,12 @@ type Graph<'Node when 'Node: comparison> = {
     static member addEdge (node1: 'Node, node2: 'Node) (graph: Graph<'Node>) =
         let edge = Edge.create(node1, node2)
         { graph with Edges = graph.Edges |> Set.add edge }
+    static member addNodes (nodes: seq<'Node>) (graph: Graph<'Node>) =
+        (graph, nodes)
+        ||> Seq.fold (fun graph node -> graph |> Graph.addNode node)
+    static member addEdges (edges: seq<'Node * 'Node>) (graph: Graph<'Node>) =
+        (graph, edges)
+        ||> Seq.fold (fun graph edge -> graph |> Graph.addEdge edge)
 
 module Graphs =
 

@@ -14,30 +14,6 @@ module Auto =
         let packed = (pown (radius) 2) * (float nodes) / 0.9069
         sqrt packed
 
-    let addNode node = ForceGraph.addNode (node, Repulsion.coulomb 1.0 )
-
-    let addEdge (node1, node2) graph =
-        graph
-        |> ForceGraph.addEdge {
-            Node1 = node1
-            Node2 = node2
-            Force = { Spring.Length = defaultLength; Spring.Stiffness = 1.0 }
-            }
-
-    let solve (iters, tolerance) (graph: ForceGraph<_>) =
-        let layout = Layout.initializeFrom graph
-        let rec search iter layout =
-            if iter > iters
-            then layout
-            else
-                let updated = Layout.update 1.0 graph layout
-                let energy = Layout.energy graph updated
-                if energy < tolerance
-                then updated
-                else
-                    search (iter + 1) updated
-        search 0 layout
-
     [<RequireQualifiedAccess>]
     module Spring =
 
