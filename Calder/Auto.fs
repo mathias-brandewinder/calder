@@ -51,6 +51,15 @@ module Auto =
                 Force = Spring.Log
                 }
 
+        let setup (graph: Graph<'Node>) =
+            (ForceGraph.empty, graph.Nodes)
+            ||> Seq.fold (fun forceGraph node -> forceGraph |> addNode node)
+            |> fun forceGraph ->
+                (forceGraph, graph.Edges)
+                ||> Seq.fold (fun graph edge ->
+                    graph |> addEdge (edge.Node1, edge.Node2)
+                    )
+
         let solve (iters, tolerance) (graph: ForceGraph<_>) =
             let layout = Layout.initializeFrom graph
             let rec search iter layout =
@@ -97,6 +106,15 @@ module Auto =
                 Node2 = node2
                 Force = attraction
                 }
+
+        let setup (graph: Graph<'Node>) =
+            (ForceGraph.empty, graph.Nodes)
+            ||> Seq.fold (fun forceGraph node -> forceGraph |> addNode node)
+            |> fun forceGraph ->
+                (forceGraph, graph.Edges)
+                ||> Seq.fold (fun graph edge ->
+                    graph |> addEdge (edge.Node1, edge.Node2)
+                    )
 
         let clip side (layout: Layout.Layout<_>) =
             let bounds = side / 2.0

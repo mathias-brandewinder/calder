@@ -1,10 +1,13 @@
-#load "Physics.fs"
 #load "Graph.fs"
+#load "Physics.fs"
+#load "ForceGraph.fs"
 #load "Layout.fs"
 #load "Auto.fs"
 
+#time "on"
+
 open Calder
-open Calder.Graph
+open Calder.ForceGraph
 
 let template (content: string) =
     content
@@ -62,7 +65,7 @@ let render graph layout =
 let rng = System.Random 1
 
 let nodesCount = 20
-let edgesCount = 20
+let edgesCount = 30
 
 let nodes = List.init nodesCount id
 let edges =
@@ -73,48 +76,42 @@ let edges =
     |> List.filter (fun (x, y) -> x <> y)
     |> List.distinct
 
+// let nodes = [ 1 .. nodesCount ]
+// let edges =
+//     [
+//         for x in 1 .. (nodesCount - 1) do
+//             for y in x + 1 .. 2 .. nodesCount do
+//                 yield x, y
+//     ]
+
 let graph =
-    (Graph.empty, nodes)
-    ||> List.fold (fun graph node -> graph |> Auto.addNode node)
+    (Graph.empty (), nodes)
+    ||> List.fold (fun graph node -> graph |> Graph.addNode node)
     |> fun graph ->
         (graph, edges)
         ||> List.fold (fun graph (x, y) ->
             graph
-            |> Auto.addEdge (x, y)
+            |> Graph.addEdge (x, y)
             )
-    // |> fun graph ->
-    //     { graph with
-    //         Center = Attraction.coulomb 0.5 |> Some
-    //     }
 
-Auto.tightRadius (graph.Nodes.Count, 1.0)
+// SPRING algorithm
 
-let layout = Layout.initializeFrom graph
+let SPRINGGraph =
+    graph
+    |> Auto.Spring.setup
+let SPRING =
+    SPRINGGraph
+    |> Auto.Spring.solve (100, 0.01)
+SPRING |> Layout.energy SPRINGGraph
+SPRING |> render SPRINGGraph
 
-#time "on"
-
-let manual =
-    layout
-    |> Layout.solve (1.0, 1000) graph
-    |> Layout.energy graph
-
-// Auto test
-
-#load "Auto.fs"
-
-let SPRING = Auto.Spring.solve (1000, 0.01) graph
-SPRING |> Layout.energy graph
-
-
-let fr = Auto.FruchtermanReingold.solve (100, 0.01, 1.0) graph
-fr |> Layout.energy graph
-
-layout |> Layout.energy graph
-let solved = Calder.Auto.solve (100, 0.01) graph
-solved  |> Layout.energy graph
-
-// #load "Render.fsx"
-SPRING |> render graph
+// Fruchterman-Reingold algorithm
+let frGraph =
+    graph
+    |> Auto.FruchtermanReingold.setup
+let fr = Auto.FruchtermanReingold.solve (100, 0.01, 0.95) frGraph
+fr |> Layout.energy frGraph
+fr |> render frGraph
 
 // run the algo 100 times to see if we get explosions
 let crashes () =
@@ -125,7 +122,7 @@ let crashes () =
         let rng = System.Random seed
 
         let nodesCount = 10
-        let edgesCount = 30
+        let edgesCount = 20
 
         let nodes = List.init nodesCount id
         let edges =
@@ -137,23 +134,20 @@ let crashes () =
             |> List.distinct
 
         let graph =
-            (Graph.empty, nodes)
-            ||> List.fold (fun graph node -> graph |> Auto.FruchtermanReingold.addNode node)
+            (Graph.empty (), nodes)
+            ||> List.fold (fun graph node -> graph |> Graph.addNode node)
             |> fun graph ->
                 (graph, edges)
                 ||> List.fold (fun graph (x, y) ->
                     graph
-                    |> Auto.FruchtermanReingold.addEdge (x, y)
+                    |> Graph.addEdge (x, y)
                     )
-            // |> fun graph ->
-            //     { graph with
-            //         Center = Attraction.coulomb 0.1 |> Some
-            //     }
 
-        let layout = Layout.initializeFrom graph
-        let initialNrj = layout |> Layout.energy graph
-        let solved = graph |> Auto.FruchtermanReingold.solve (100, 0.01, 0.95) // |> Calder.Auto.solve (100, 0.001)
-        let finalEnergy = solved  |> Layout.energy graph
+        let fGraph = Auto.FruchtermanReingold.setup graph
+        let layout = Layout.initializeFrom fGraph
+        let initialNrj = layout |> Layout.energy fGraph
+        let solved = fGraph |> Auto.FruchtermanReingold.solve (100, 0.01, 0.95) // |> Calder.Auto.solve (100, 0.001)
+        let finalEnergy = solved  |> Layout.energy fGraph
 
         seed, initialNrj, finalEnergy
         )
