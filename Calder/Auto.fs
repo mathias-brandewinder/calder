@@ -37,3 +37,30 @@ module Auto =
                 else
                     search (iter + 1) updated
         search 0 layout
+
+    [<RequireQualifiedAccess>]
+    module Spring =
+
+        let addNode node = Graph.addNode (node, Repulsion.SquareRoot)
+
+        let addEdge (node1, node2) graph =
+            graph
+            |> Graph.addEdge {
+                Node1 = node1
+                Node2 = node2
+                Force = Spring.Log
+                }
+
+        let solve (iters, tolerance) (graph: Graph<_>) =
+            let layout = Layout.initializeFrom graph
+            let rec search iter layout =
+                if iter > iters
+                then layout
+                else
+                    let updated = Layout.update 0.1 graph layout
+                    let energy = Layout.energy graph updated
+                    if energy < tolerance
+                    then updated
+                    else
+                        search (iter + 1) updated
+            search 0 layout

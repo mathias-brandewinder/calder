@@ -50,6 +50,8 @@ let manual =
 // Auto test
 
 #load "Auto.fs"
+let SPRING = Auto.Spring.solve (100, 0.01) graph
+SPRING |> Layout.energy graph
 
 layout |> Layout.energy graph
 let solved = Calder.Auto.solve (100, 0.01) graph
@@ -91,7 +93,7 @@ let crashes () =
 
         let layout = Layout.initializeFrom graph
         let initialNrj = layout |> Layout.energy graph
-        let solved = graph |> Calder.Auto.solve (100, 0.001)
+        let solved = graph |> Auto.Spring.solve (500, 0.01) // |> Calder.Auto.solve (100, 0.001)
         let finalEnergy = solved  |> Layout.energy graph
 
         seed, initialNrj, finalEnergy
