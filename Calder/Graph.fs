@@ -13,6 +13,7 @@ module Graph =
     type Graph<'Node when 'Node: comparison> = {
         Nodes: Map<'Node, Force>
         Edges: Map<'Node, Map<'Node, Force>>
+        Center: Option<Force>
         }
         with
         member this.Node node =
@@ -21,6 +22,7 @@ module Graph =
     let empty = {
         Nodes = Map.empty
         Edges = Map.empty
+        Center = None
         }
 
     let addNode (node: 'Node, force: Force) (graph: Graph<'Node>): Graph<'Node> =

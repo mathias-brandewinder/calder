@@ -31,22 +31,20 @@ let graph =
             graph
             |> Auto.addEdge (x, y)
             )
+    |> fun graph ->
+        { graph with
+            Center = Attraction.coulomb 0.5 |> Some
+        }
 
 Auto.tightRadius (graph.Nodes.Count, 1.0)
 
 let layout = Layout.initializeFrom graph
-let a0 = Auto.initialValue graph layout
 
 #time "on"
 
-let basic =
-    layout
-    |> Layout.solve (a0, 100) graph
-    |> Layout.energy graph
-
 let manual =
     layout
-    |> Layout.solve (0.10, 100) graph
+    |> Layout.solve (1.0, 1000) graph
     |> Layout.energy graph
 
 // Auto test
@@ -57,6 +55,7 @@ layout |> Layout.energy graph
 let solved = Calder.Auto.solve (100, 0.01) graph
 solved  |> Layout.energy graph
 
+// run the algo 100 times to see if we get explosions
 let crashes () =
 
     let seeds = [ 0 .. 99 ]
@@ -85,6 +84,10 @@ let crashes () =
                     graph
                     |> Auto.addEdge (x, y)
                     )
+            |> fun graph ->
+                { graph with
+                    Center = Attraction.coulomb 0.1 |> Some
+                }
 
         let layout = Layout.initializeFrom graph
         let initialNrj = layout |> Layout.energy graph

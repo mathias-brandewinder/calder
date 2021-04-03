@@ -9,12 +9,12 @@ open Calder.Layout
 
 let graph =
     Graph.empty
-    |> Graph.addNode (1, { CoulombRepulsor.Repulsion = 1.0 })
-    |> Graph.addNode (2, { CoulombRepulsor.Repulsion = 1.0 })
-    |> Graph.addNode (3, { CoulombRepulsor.Repulsion = 1.0 })
-    |> Graph.addNode (4, { CoulombRepulsor.Repulsion = 1.0 })
-    |> Graph.addEdge { Node1 = 1; Node2 = 2; Force = { Length = 1.0; Stiffness = 1.0 } }
-    |> Graph.addEdge { Node1 = 3; Node2 = 4; Force = { Length = 1.0; Stiffness = 1.0 } }
+    |> Graph.addNode (1, Repulsion.coulomb 1.0)
+    |> Graph.addNode (2, Repulsion.coulomb 1.0)
+    |> Graph.addNode (3, Repulsion.coulomb 1.0)
+    |> Graph.addNode (4, Repulsion.coulomb 1.0)
+    |> Graph.addEdge { Node1 = 1; Node2 = 2; Force = { Spring.Length = 1.0; Spring.Stiffness = 1.0 } }
+    |> Graph.addEdge { Node1 = 3; Node2 = 4; Force = { Spring.Length = 1.0; Spring.Stiffness = 1.0 } }
 
 let layout = graph |> Layout.initializeFrom
 
@@ -39,18 +39,3 @@ layout
 Graph.empty<int>
 |> Layout.initializeFrom
 |> Layout.project 100.0
-
-let nodeA = { X = 0.0; Y = 0.0 }
-let nodeB = { X = 1.0; Y = 0.0 }
-let nodeC = { X = 0.0; Y = 1.0 }
-
-let spring = { Length = 1.0; Stiffness = 1.0 } :> Force
-
-let network =
-    [
-        nodeA, spring
-        nodeC, spring
-    ]
-
-network
-|> List.sumBy (fun (node, spring) -> nodeB |> spring.applyFrom node)

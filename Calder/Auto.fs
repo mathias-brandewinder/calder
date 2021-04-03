@@ -14,14 +14,14 @@ module Auto =
         let packed = (pown (radius) 2) * (float nodes) / 0.9069
         sqrt packed
 
-    let addNode node = Graph.addNode (node, { CoulombRepulsor.Repulsion = 1.0 })
+    let addNode node = Graph.addNode (node, Repulsion.coulomb 1.0 )
 
     let addEdge (node1, node2) graph =
         graph
         |> Graph.addEdge {
             Node1 = node1
             Node2 = node2
-            Force = { Length = defaultLength; Stiffness = 1.0 }
+            Force = { Spring.Length = defaultLength; Spring.Stiffness = 1.0 }
             }
 
     let solve (iters, tolerance) (graph: Graph<_>) =

@@ -45,47 +45,95 @@ module Physics =
             member this.applyFrom _ _ = Direction.Zero
         }
 
-    // Assymmetric spring
-    type Spring = {
-        Length: float
-        Stiffness: float
-        }
-        with
-        interface Force with
-            member this.applyFrom origin target =
-                let direction = target - origin
-                let strength = min 0.0 (this.Stiffness * (direction.Length - this.Length))
-                strength * direction
+    [<RequireQualifiedAccess>]
+    module Spring =
 
-    // Coulomb-style repulsion force
-    type CoulombRepulsor = {
-        Repulsion: float
-        }
-        with
-        interface Force with
-            member this.applyFrom origin target =
-                let direction = target - origin
-                let strength =
-                    this.Repulsion / (pown direction.Length 2)
-                - strength * direction
+        type Linear = {
+            Length: float
+            Stiffness: float
+            }
+            with
+            interface Force with
+                member this.applyFrom origin target =
+                    let direction = target - origin
+                    let strength = min 0.0 (this.Stiffness * (direction.Length - this.Length))
+                    strength * direction
 
-    type LinearRepulsor = {
-        Length: float
-        }
-        with
-        interface Force with
-            member this.applyFrom origin target =
-                let direction = target - origin
-                let strength =
-                    this.Length - direction.Length
-                    |> max 0.0
-                - strength * direction
+        let Log = {
+            new Force with
+                member this.applyFrom origin target =
+                    let direction = target - origin
+                    let length = direction.Length
+                    let strength = 2. * log length
+                    strength * direction
+            }
 
-    type Attractor = {
-        Strength: float
-        }
-        with
-        interface Force with
-            member this.applyFrom origin target =
-                let direction = target - origin
-                this.Strength * direction
+    [<RequireQualifiedAccess>]
+    module Repulsion =
+
+        type private Coulomb = {
+            Repulsion: float
+            }
+            with
+            interface Force with
+                member this.applyFrom origin target =
+                    let direction = target - origin
+                    let strength =
+                        this.Repulsion / (pown direction.Length 2)
+                    - strength * direction
+
+        let coulomb repulsion =
+            { Coulomb.Repulsion = repulsion } :> Force
+
+        let SquareRoot = {
+            new Force with
+                member this.applyFrom origin target =
+                    let direction = target - origin
+                    let length = direction.Length
+                    let strength = 1. / sqrt length
+                    - strength * direction
+            }
+
+        type private Linear = {
+            Length: float
+            }
+            with
+            interface Force with
+                member this.applyFrom origin target =
+                    let direction = target - origin
+                    let strength =
+                        this.Length - direction.Length
+                        |> max 0.0
+                    - strength * direction
+
+        let linear length =
+            { Linear.Length = length } :> Force
+
+    [<RequireQualifiedAccess>]
+    module Attraction =
+
+        type private Linear = {
+            Strength: float
+            }
+            with
+            interface Force with
+                member this.applyFrom origin target =
+                    let direction = target - origin
+                    this.Strength * direction
+
+        let linear strength =
+            { Strength = strength } :> Force
+
+        type private Coulomb = {
+            Attraction: float
+            }
+            with
+            interface Force with
+                member this.applyFrom origin target =
+                    let direction = target - origin
+                    let strength =
+                        this.Attraction / (pown direction.Length 2)
+                    strength * direction
+
+        let coulomb attraction =
+            { Attraction = attraction } :> Force

@@ -44,6 +44,7 @@ module Layout =
 
     let nodeForce (graph: Graph<_>) layout node =
         let position = layout.Nodes.[node]
+
         let nodesRepulsion =
             graph.Nodes
             |> Seq.sumBy (fun kv ->
@@ -55,6 +56,7 @@ module Layout =
                 position
                 |> force.applyFrom (layout.Nodes.[kv.Key])
                 )
+
         let edgesAttraction =
             graph.Edges
             |> Map.find node
@@ -64,8 +66,13 @@ module Layout =
                 position
                 |> force.applyFrom origin
                 )
-        // let centralAttraction = config.CenterAttraction.applyFrom graph.Center position
-        nodesRepulsion + edgesAttraction //+ centralAttraction
+
+        let centralAttraction =
+            graph.Center
+            |> Option.defaultValue Neutral
+            |> fun force -> force.applyFrom Origin position
+
+        nodesRepulsion + edgesAttraction + centralAttraction
 
     let update aggressiveness (graph: Graph<_>) (layout: Layout<_>) =
         {
