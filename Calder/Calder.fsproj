@@ -4,8 +4,9 @@
     <AssemblyVersion>0.1.0.0</AssemblyVersion>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="Physics.fs" />
     <Compile Include="Graph.fs" />
+    <Compile Include="Physics.fs" />
+    <Compile Include="ForceGraph.fs" />
     <Compile Include="Layout.fs" />
     <Compile Include="Auto.fs" />
   </ItemGroup>

@@ -3,7 +3,7 @@ namespace Calder
 module Layout =
 
     open Physics
-    open Graph
+    open ForceGraph
 
     type State =
         | Empty
@@ -29,7 +29,7 @@ module Layout =
                 let y = this.Nodes |> Seq.averageBy (fun kv -> kv.Value.Y)
                 { X = x; Y = y }
 
-    let initializeFrom (graph: Graph<_>) =
+    let initializeFrom (graph: ForceGraph<_>) =
         let rng = System.Random ()
         {
             Nodes =
@@ -42,7 +42,7 @@ module Layout =
                     )
         }
 
-    let nodeForce (graph: Graph<_>) layout node =
+    let nodeForce (graph: ForceGraph<_>) layout node =
         let position = layout.Nodes.[node]
 
         let nodesRepulsion =
@@ -74,7 +74,7 @@ module Layout =
 
         nodesRepulsion + edgesAttraction + centralAttraction
 
-    let update aggressiveness (graph: Graph<_>) (layout: Layout<_>) =
+    let update aggressiveness (graph: ForceGraph<_>) (layout: Layout<_>) =
         {
             layout with
                 Nodes =
@@ -84,7 +84,7 @@ module Layout =
                         )
         }
 
-    let energy (graph: Graph<_>) layout =
+    let energy (graph: ForceGraph<_>) layout =
         graph.Nodes
         |> Seq.sumBy (fun kv ->
             kv.Key
@@ -92,7 +92,7 @@ module Layout =
             |> fun dir -> dir.Length
             )
 
-    let solve (rate, iters) (graph: Graph<_>) (layout: Layout<_>) =
+    let solve (rate, iters) (graph: ForceGraph<_>) (layout: Layout<_>) =
         match layout.State with
         | Empty -> layout
         | Single -> layout
