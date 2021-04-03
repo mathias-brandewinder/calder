@@ -65,7 +65,7 @@ let render graph layout =
 let rng = System.Random 1
 
 let nodesCount = 20
-let edgesCount = 30
+let edgesCount = 20
 
 let nodes = List.init nodesCount id
 let edges =
@@ -75,14 +75,6 @@ let edges =
         )
     |> List.filter (fun (x, y) -> x <> y)
     |> List.distinct
-
-// let nodes = [ 1 .. nodesCount ]
-// let edges =
-//     [
-//         for x in 1 .. (nodesCount - 1) do
-//             for y in x + 1 .. 2 .. nodesCount do
-//                 yield x, y
-//     ]
 
 let graph =
     (Graph.empty (), nodes)
@@ -98,6 +90,8 @@ let graph =
 
 let SPRINGGraph =
     graph
+    |> Graphs.disjoint
+    |> List.head
     |> Auto.Spring.setup
 let SPRING =
     SPRINGGraph
@@ -105,9 +99,26 @@ let SPRING =
 SPRING |> Layout.energy SPRINGGraph
 SPRING |> render SPRINGGraph
 
+let g =
+    Graph.empty ()
+    |> Graph.addNode 1
+    |> Graph.addNode 2
+    |> Graph.addNode 3
+    |> Graph.addNode 4
+    |> Graph.addNode 5
+    |> Graph.addNode 6
+    |> Graph.addEdge (1, 2)
+    |> Graph.addEdge (1, 3)
+    |> Graph.addEdge (1, 4)
+    |> Graph.addEdge (1, 5)
+    |> Graph.addEdge (1, 6)
+    |> Graph.addEdge (2, 3)
+    |> Graph.addEdge (2, 4)
 // Fruchterman-Reingold algorithm
 let frGraph =
-    graph
+    g
+    |> Graphs.disjoint
+    |> List.item 0
     |> Auto.FruchtermanReingold.setup
 let fr = Auto.FruchtermanReingold.solve (100, 0.01, 0.95) frGraph
 fr |> Layout.energy frGraph
