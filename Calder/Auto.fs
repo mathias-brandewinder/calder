@@ -92,19 +92,6 @@ module Auto =
                     graph |> addEdge (edge.Node1, edge.Node2)
                     )
 
-        let clip side (layout: Layout.Layout<_>) =
-            let bounds = side / 2.0
-            { layout with
-                Nodes =
-                    layout.Nodes
-                    |> Map.map (fun node position ->
-                        {
-                            X = min bounds position.X |> max (- bounds)
-                            Y = min bounds position.Y |> max (- bounds)
-                        }
-                        )
-            }
-
         let update temp (graph: ForceGraph<_>) (layout: Layout.Layout<_>) =
             {
                 layout with
@@ -135,3 +122,31 @@ module Auto =
                     else
                         search (iter + 1, temp * cooldown) updated
             search (0, 1.0) layout
+
+        let shrink (graph: Graph<'Node>) (layout: Layout.Layout<'Node>) =
+            let center = layout.Center
+            let total = layout.Nodes.Count |> float
+            let subGraphs = graph |> Graphs.partitions
+            let corrections =
+                subGraphs
+                |> List.collect (fun nodes ->
+                    let subLayout =
+                        { Layout.Nodes =
+                            nodes
+                            |> Seq.map (fun node ->
+                                node, layout.Nodes.[node]
+                                )
+                            |> Map.ofSeq
+                        }
+                    let localCenter = subLayout.Center
+                    let weight = 1.0 - (float nodes.Count / total)
+                    nodes
+                    |> Set.toList
+                    |> List.map (fun node -> node, weight * (center - localCenter))
+                    )
+                |> Map.ofList
+            { layout with
+                Nodes =
+                    layout.Nodes
+                    |> Map.map (fun node point -> point + (-1.0 * corrections.[node]))
+            }

@@ -31,7 +31,7 @@ let save content =
         content
         )
 
-let render graph layout =
+let render (graph: Graph<'Node>) layout =
     let layout =
         layout
         |> Layout.project 500.0
@@ -44,17 +44,14 @@ let render graph layout =
         |> String.concat "\n"
     let edges =
         graph.Edges
-        |> Seq.collect (fun kv ->
-            let origin = layout.Nodes.[kv.Key]
-            kv.Value
-            |> Seq.map (fun kv ->
-                let destination = layout.Nodes.[kv.Key]
-                sprintf """<line x1="%f" y1="%f" x2="%f" y2="%f" style="stroke: Black;stroke-width:1" />"""
-                    origin.X
-                    origin.Y
-                    destination.X
-                    destination.Y
-                )
+        |> Seq.map (fun edge ->
+            let origin = layout.Nodes.[edge.Node1]
+            let destination = layout.Nodes.[edge.Node2]
+            sprintf """<line x1="%f" y1="%f" x2="%f" y2="%f" style="stroke: Black;stroke-width:1" />"""
+                origin.X
+                origin.Y
+                destination.X
+                destination.Y
             )
         |> String.concat "\n"
     sprintf "%s\n%s" nodes edges
@@ -87,22 +84,24 @@ let SPRINGGraph =
     graph
     |> Graphs.disjoint
     |> List.head
-    |> Auto.Spring.setup
 let SPRING =
     SPRINGGraph
+    |> Auto.Spring.setup
     |> Auto.Spring.solve (100, 0.01)
-SPRING |> Layout.energy SPRINGGraph
+
 SPRING |> render SPRINGGraph
 
 // Fruchterman-Reingold algorithm
-let frGraph =
+let subGraph =
     graph
-    |> Graphs.disjoint
-    |> List.item 0
+    // |> Graphs.disjoint
+    // |> List.maxBy (fun x -> x.Nodes.Count)
+let fr =
+    subGraph
     |> Auto.FruchtermanReingold.setup
-let fr = Auto.FruchtermanReingold.solve (100, 0.01, 0.95) frGraph
-fr |> Layout.energy frGraph
-fr |> render frGraph
+    |> Auto.FruchtermanReingold.solve (100, 0.01, 0.95)
+    |> Auto.FruchtermanReingold.shrink subGraph
+fr |> render subGraph
 
 // run the algo 100 times to see if we get explosions
 let crashes () =
