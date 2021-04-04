@@ -69,8 +69,8 @@ module Layout =
 
         let centralAttraction =
             graph.Center
-            |> Option.defaultValue Neutral
-            |> fun force -> force.applyFrom Origin position
+            |> Option.map (fun force -> force.applyFrom layout.Center position)
+            |> Option.defaultValue Direction.Zero
 
         nodesRepulsion + edgesAttraction + centralAttraction
 

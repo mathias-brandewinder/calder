@@ -59,10 +59,10 @@ let render (graph: Graph<'Node>) layout =
     |> save
 
 
-let rng = System.Random 1
+let rng = System.Random 0
 
-let nodesCount = 20
-let edgesCount = 20
+let nodesCount = 15
+let edgesCount = 15
 
 let nodes = List.init nodesCount id
 let edges =
@@ -80,39 +80,34 @@ let graph =
 
 // SPRING algorithm
 
-let SPRINGGraph =
-    graph
-    |> Graphs.disjoint
-    |> List.head
 let SPRING =
-    SPRINGGraph
+    graph
     |> Auto.Spring.setup
     |> Auto.Spring.solve (100, 0.01)
 
-SPRING |> render SPRINGGraph
+SPRING |> render graph
 
 // Fruchterman-Reingold algorithm
-let subGraph =
-    graph
-    // |> Graphs.disjoint
-    // |> List.maxBy (fun x -> x.Nodes.Count)
+let config: Auto.FruchtermanReingold.Config = { Iterations = 100; Tolerance = 0.01; Cooldown = 0.95 }
 let fr =
-    subGraph
+    graph
     |> Auto.FruchtermanReingold.setup
-    |> Auto.FruchtermanReingold.solve (100, 0.01, 0.95)
-    |> Auto.FruchtermanReingold.shrink subGraph
-fr |> render subGraph
+    |> Auto.FruchtermanReingold.solve config
+fr |> render graph
 
 // run the algo 100 times to see if we get explosions
-let crashes () =
+let stability () =
 
     let seeds = [ 0 .. 99 ]
+    let maxNodes = 30
+    let maxEdges = 30
+
     seeds
     |> List.map (fun seed ->
         let rng = System.Random seed
 
-        let nodesCount = 10
-        let edgesCount = 20
+        let nodesCount = rng.Next maxNodes
+        let edgesCount = rng.Next maxEdges
 
         let nodes = List.init nodesCount id
         let edges =
@@ -130,9 +125,9 @@ let crashes () =
 
         let fGraph = Auto.FruchtermanReingold.setup graph
         let layout = Layout.initializeFrom fGraph
-        let initialNrj = layout |> Layout.energy fGraph
-        let solved = fGraph |> Auto.FruchtermanReingold.solve (100, 0.01, 0.95)
+        let initialEnergy = layout |> Layout.energy fGraph
+        let solved = Auto.solve graph
         let finalEnergy = solved  |> Layout.energy fGraph
 
-        seed, initialNrj, finalEnergy
+        seed, nodesCount, edgesCount, initialEnergy, finalEnergy
         )
